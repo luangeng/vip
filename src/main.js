@@ -52,6 +52,7 @@ import {
 } from 'cube-ui'
 import App from './App'
 import router from './router'
+// import AV from './AV'
 
 Vue.use(Button)
 Vue.use(Loading)
@@ -101,3 +102,5 @@ new Vue({
   template: '<App/>',
   components: { App }
 })
+
+var AV = require('leancloud-storage');
