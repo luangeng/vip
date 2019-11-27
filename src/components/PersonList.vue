@@ -1,5 +1,5 @@
 <template>
-  <div style="padding:10px">
+  <div>
     <span>姓名:</span>
     <cube-input v-model="name" placeholder="输入姓名查询" type="text" :autofocus="true"></cube-input>
 
@@ -16,7 +16,7 @@
 
 
 <script>
-import g from '@/components/Global'
+import g from "@/components/Global";
 export default {
   data() {
     return {
@@ -30,8 +30,7 @@ export default {
       }
     };
   },
-  created: function() {
-  },
+  created: function() {},
   methods: {
     query() {
       var query1 = new g.AV.Query("Person");
@@ -62,8 +61,7 @@ export default {
     detail(str) {
       var index = str.substring(0, str.indexOf(":"));
       var id = this.ids[index];
-      console.log(id);
-       this.$router.push({name: 'Person',params:{ id:id}});
+      this.$router.push({ path: "person", query: { id: id } });
     }
   }
 };

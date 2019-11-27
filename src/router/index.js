@@ -4,7 +4,7 @@ import HelloWorld from '@/components/HelloWorld'
 import Login from '@/components/Login'
 import Person from '@/components/Person'
 import PersonList from '@/components/PersonList'
-import Events from '@/components/Events'
+import Events from '@/components/Event'
 
 Vue.use(Router)
 
@@ -16,19 +16,19 @@ export default new Router({
       component: HelloWorld
     },{
       path: '/login',
-      name: 'Login',
+      name: 'login',
       component: Login
     },{
       path: '/person',
-      name: 'Person',
+      name: 'person',
       component: Person
     },{
       path: '/personList',
-      name: 'PersonList',
+      name: 'personList',
       component: PersonList
     },{
-      path: '/events',
-      name: 'Events',
+      path: '/event',
+      name: 'event',
       component: Events
     }
   ]
