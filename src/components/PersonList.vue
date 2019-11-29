@@ -1,10 +1,12 @@
 <template>
   <div>
-    <span>姓名:</span>
-    <cube-input v-model="name" placeholder="输入姓名查询" type="text" :autofocus="true"></cube-input>
+    <cube-input v-model="name" placeholder="输入姓名查询" type="text" :autofocus="true">
+      <span slot="prepend" class="span-text">姓名:</span>
+    </cube-input>
 
-    <span>电话</span>
-    <cube-input v-model="phone" placeholder="输入电话查询" type="number"></cube-input>
+    <cube-input v-model="phone" placeholder="输入电话查询" type="number">
+      <span slot="prepend" class="span-text">电话:</span>
+    </cube-input>
 
     <cube-button :primary="true" @click="query">查询</cube-button>
 
@@ -43,7 +45,15 @@ export default {
       } else if (this.phone.trim().length == 0) {
         query = query1;
       }
+
+      var loading = this.$createToast({
+        txt: "Loading...",
+        mask: true
+      });
+
+      loading.show();
       query.find().then(results => {
+        loading.hide();
         this.items.splice(0);
         this.ids.splice(0);
         for (var i = 0; i < results.length; i++) {

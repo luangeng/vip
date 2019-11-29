@@ -1,9 +1,11 @@
 <template>
   <div style="padding:20px">
-    <span>邮箱:</span>
-    <cube-input v-model="email" type="text" :autofocus="true"></cube-input>
-    <span>密码:</span>
-    <cube-input v-model="pwd" type="password" :eye="eye"></cube-input>
+    <cube-input v-model="email" type="text" :autofocus="true">
+      <span slot="prepend" class="span-text">邮箱:</span>
+    </cube-input>
+    <cube-input v-model="pwd" type="password" :eye="eye">
+      <span slot="prepend" class="span-text">密码:</span>
+    </cube-input>
 
     <cube-button type="submit" :primary="true" @click="login">登陆</cube-button>
   </div>

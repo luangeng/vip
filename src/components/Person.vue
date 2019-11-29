@@ -1,28 +1,39 @@
 <template>
   <div>
-    <span>姓名:</span>
-    <cube-input v-model="name" type="text" :autofocus="true" :disabled="!editing"></cube-input>
+    <cube-input v-model="name" type="text" :autofocus="true" :disabled="!editing">
+      <span slot="prepend" class="span-text">姓名:</span>
+    </cube-input>
 
-    <span>性别:</span>
-    <cube-radio-group v-model="sex" :options="sexs" :horizontal="true" :disabled="!editing" />
+    <!-- <span slot="prepend">性别:</span>
+    <cube-radio-group v-model="sex" :options="sexs" :horizontal="true" :disabled="!editing"></cube-radio-group>-->
 
-    <span>phone</span>
-    <cube-input v-model="phone" placeholder="phone" type="number" :disabled="!editing"></cube-input>
+    <cube-input v-model="phone" type="number" :disabled="!editing">
+      <span slot="prepend" class="span-text">电话:</span>
+    </cube-input>
 
-    <span>age:</span>
-    <cube-input v-model="age" placeholder="age" type="number" :disabled="!editing"></cube-input>
+    <cube-input v-model="sex" type="text" :disabled="!editing">
+      <span slot="prepend" class="span-text">性别:</span>
+    </cube-input>
 
-    <span>Email:</span>
-    <cube-input v-model="email" placeholder="email" type="email" :disabled="!editing"></cube-input>
+    <cube-input v-model="age" type="number" :disabled="!editing">
+      <span slot="prepend" class="span-text">年龄:</span>
+    </cube-input>
 
-    <span>Date:</span>
-    <cube-input v-model="date" type="text" :disabled="true"></cube-input>
+    <cube-input v-model="email" type="email" :disabled="!editing">
+      <span slot="prepend" class="span-text">邮箱:</span>
+    </cube-input>
 
-    <span>remark:</span>
-    <cube-textarea v-model="remark" placeholder="备注" :disabled="!editing"></cube-textarea>
+    <cube-input v-model="remark" type="text" :disabled="!editing">
+      <span slot="prepend" class="span-text">备注:</span>
+    </cube-input>
+
+    <cube-input v-model="date" type="text" :disabled="true">
+      <span slot="prepend" class="span-text">注册时间:</span>
+    </cube-input>
 
     <div class="scroll-list-wrap">
-      <cube-scroll ref="scroll" :data="events" :options="options" @click="edit"></cube-scroll>
+      <span class="span-text">事件：</span>
+      <cube-scroll ref="scroll" :data="events" :options="options" @click="editEvent"></cube-scroll>
     </div>
 
     <div style="margin-top:20px">
@@ -33,6 +44,7 @@
       <div v-if="editing">
         <cube-button :primary="true" @click="save">保存</cube-button>
       </div>
+      <cube-button :primary="true" @click="back">返回</cube-button>
     </div>
   </div>
 </template>
@@ -47,26 +59,16 @@ export default {
       phone: "",
       age: "",
       email: "",
-      date: "",
-      sex: "1",
+      date: new Date().format("yyyy-MM-dd hh:mm"),
+      sex: "",
       remark: "",
       editing: false,
       events: [],
-      eventsIds: [],
+      eventsMap: undefined,
       options: {
         scrollbar: true,
         startY: 0
-      },
-      sexs: [
-        {
-          label: "男",
-          value: "1"
-        },
-        {
-          label: "女",
-          value: "0"
-        }
-      ]
+      }
     };
   },
   watch: {
@@ -82,15 +84,23 @@ export default {
   created: function() {
     if (this.id != undefined) {
       this.editing = false;
+
+      var loading = this.$createToast({
+        txt: "Loading...",
+        mask: true
+      });
+      loading.show();
+
       var query = new g.AV.Query("Person");
       query.get(this.id).then(p => {
+        loading.hide();
         this.name = p.get("name");
         this.sex = p.get("sex");
         this.phone = p.get("phone");
         this.age = p.get("age");
         this.email = p.get("email");
         this.remark = p.get("remark");
-        this.date = p.get("createdAt").format("yyyy-MM-dd hh:mm:ss");
+        this.date = p.get("createdAt").format("yyyy-MM-dd hh:mm");
       });
       this.queryEvents();
     } else {
@@ -99,8 +109,14 @@ export default {
   },
   methods: {
     save() {
-      var Person = g.AV.Object.extend("Person");
-      var p = new Person();
+      var p;
+      if (this.editing) {
+        p = g.AV.Object.createWithoutData("Person", this.id);
+      } else {
+        var Person = g.AV.Object.extend("Person");
+        p = new Person();
+      }
+
       p.set("name", this.name);
       p.set("phone", this.phone);
       p.set("sex", this.sex);
@@ -108,7 +124,7 @@ export default {
       p.set("email", this.email);
       p.set("remark", this.remark);
       p.save().then(
-        function(res) {
+        res => {
           this.editing = false;
           this.$createDialog({
             type: "alert",
@@ -116,7 +132,9 @@ export default {
             content: "dialog content"
           }).show();
         },
-        function(error) {}
+        function(error) {
+          console(error);
+        }
       );
     },
     edit() {
@@ -124,21 +142,33 @@ export default {
     },
     queryEvents() {
       var query = new g.AV.Query("Event");
+      this.eventsMap = new Map();
       query.equalTo("personId", this.id);
       query.descending("createdAt");
       query.find().then(results => {
         this.events.splice(0);
         for (var i = 0; i < results.length; i++) {
-          this.events.push(
+          var text =
             results[i].get("createdAt").format("yyyy-MM-dd hh:mm") +
-              " " +
-              results[i].get("desc")
-          );
+            " " +
+            results[i].get("desc");
+          this.events.push(text);
+          this.eventsMap.set(text, results[i].id);
         }
       });
     },
     newEvent() {
       this.$router.push({ path: "event", query: { personId: this.id } });
+    },
+    editEvent(str) {
+      var id = this.eventsMap.get(str);
+      this.$router.push({
+        path: "event",
+        query: { id: id, personId: this.id }
+      });
+    },
+    back() {
+      this.$router.push({ path: "personList" });
     }
   }
 };
@@ -154,7 +184,14 @@ export default {
   margin-top: 10px;
 }
 
+.cube-scroll-list {
+  color: grey;
+}
+
 .cube-scroll-item {
-  font-size: 0.18rem;
+  font-size: 12px;
+  line-height: 30px;
+  height: 30px;
+  padding-left: 10px;
 }
 </style>
